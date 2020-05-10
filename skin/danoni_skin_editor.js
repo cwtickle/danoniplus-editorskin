@@ -9,7 +9,7 @@
  * 
  * https://github.com/cwtickle/danoniplus-editorskin
  */
-var g_editorVersion = `Ver 0.2.0`;
+var g_editorVersion = `Ver 0.3.0`;
 var g_editorRevisedDate = `2020/05/10`;
 var g_keyDownEvent;
 
@@ -187,6 +187,82 @@ function loadEditorInit() {
  */
 function mainEditorInit() {
 
+    createEditorMain();
+    createSideBar();
+
+    // タイトルへ戻る
+    const btnEditorBack = createCssButton({
+        id: `btnEditorBack`,
+        name: `<`,
+        x: 10,
+        y: 10,
+        width: 30,
+        height: 30,
+        fontsize: 20,
+        align: C_ALIGN_CENTER,
+        class: g_cssObj.button_Back,
+    }, _ => {
+        if (window.confirm(`エディターを終了します。よろしいですか？`)) {
+            clearEditorWindow();
+            createEditorWindow();
+        }
+    });
+    editorRoot.appendChild(btnEditorBack);
+}
+
+function createEditorMain() {
+    const mainEditorRoot = createSprite(`editorRoot`, `mainEditorRoot`, 0, 0, g_sWidth - 150, g_sHeight);
+    createLine(mainEditorRoot);
+
+}
+
+function createLine(_obj) {
+    const lineBase = document.createElement(`canvas`);
+    lineBase.id = `editorLine`;
+    lineBase.width = `${g_sWidth - 300}`;
+    lineBase.height = `${g_sHeight - 40}`;
+    lineBase.style.left = `100px`;
+    lineBase.style.top = `20px`;
+    lineBase.style.position = `absolute`;
+    lineBase.style.background = `#ffffff`;
+
+    const context = lineBase.getContext(`2d`);
+
+    for (let j = 0; j <= 64; j += 16) {
+        drawEditorLine(context, j, `main`, 2);
+        for (let k = 0; k < 16; k++) {
+            drawEditorLine(context, (j + k), `sub`, 2);
+        }
+    }
+    _obj.appendChild(lineBase);
+}
+
+/**
+ * グラフ上に目盛を表示
+ * @param {object} _context 
+ * @param {number} _posy 
+ * @param {string} _lineType 
+ * @param {number} _fixed
+ */
+function drawEditorLine(_context, _posy, _lineType, _fixed = 0) {
+    const lineY = _posy * 7 + 5;
+    _context.beginPath();
+    _context.moveTo(0, lineY);
+    _context.lineTo(g_sWidth - 250, lineY);
+    _context.lineWidth = 1;
+
+    if (_lineType === `main`) {
+        _context.strokeStyle = `#000000`;
+    } else {
+        _context.strokeStyle = `#646464`;
+    }
+    _context.stroke();
+}
+
+/**
+ * メイン画面・サイドバー表示
+ */
+function createSideBar() {
     const sideBarRoot = createSprite(`editorRoot`, `sideBarRoot`, g_sWidth - 150, 0, 150, g_sHeight);
 
     // ページ表示
@@ -246,25 +322,6 @@ function mainEditorInit() {
         console.log(`Save`);
     });
     sideBarRoot.appendChild(btnEditorSave);
-
-    // タイトルへ戻る
-    const btnEditorBack = createCssButton({
-        id: `btnEditorBack`,
-        name: `<`,
-        x: 10,
-        y: 10,
-        width: 30,
-        height: 30,
-        fontsize: 20,
-        align: C_ALIGN_CENTER,
-        class: g_cssObj.button_Back,
-    }, _ => {
-        if (window.confirm(`エディターを終了します。よろしいですか？`)) {
-            clearEditorWindow();
-            createEditorWindow();
-        }
-    });
-    editorRoot.appendChild(btnEditorBack);
 }
 
 function createEditorLabel(_id, _x, _y, _width, _height, _fontsize, _text, _align = C_ALIGN_LEFT) {
