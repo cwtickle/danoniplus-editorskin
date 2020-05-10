@@ -9,8 +9,16 @@
  * 
  * https://github.com/cwtickle/danoniplus-editorskin
  */
-const g_editorVersion = `Ver 0.1.0`;
-const g_editorRevisedDate = `2020/05/10`;
+var g_editorVersion = `Ver 0.2.0`;
+var g_editorRevisedDate = `2020/05/10`;
+var g_keyDownEvent;
+
+var g_editorObj = {
+    bpm: 180,
+    firstNumber: 200,
+    interval: 10,
+    page: 1,
+};
 
 /**
  * タイトル画面 [Scene: Title / Melon]
@@ -37,6 +45,8 @@ function skinOptionInit() {
         animationName: (g_initialFlg ? `` : `smallToNormalY`),
         class: g_cssObj.button_Tweet,
     }, _ => {
+        g_keyDownEvent = document.onkeydown;
+        document.onkeydown = _ => { };
         createEditorWindow();
     });
     divRoot.appendChild(btnEditor);
@@ -50,12 +60,36 @@ function clearEditorWindow() {
 }
 
 /**
+ * テキストボックスの作成
+ * @param {string} _id 
+ * @param {number} _x 
+ * @param {number} _y 
+ * @param {number} _width 
+ */
+function createTextBox(_id, _x, _y, _width, _text = ``) {
+    const input = document.createElement(`input`);
+    input.id = _id;
+    input.type = `text`;
+    input.style.position = `absolute`;
+    input.style.left = `${_x}px`;
+    input.style.top = `${_y}px`;
+    input.style.width = `${_width}px`;
+    input.value = _text;
+
+    return input;
+}
+
+/**
  * エディタータイトル画面の作成
  */
 function createEditorWindow() {
     const editorRoot = createSprite(`divRoot`, `editorRoot`, 0, 0, g_sWidth, g_sHeight);
     editorRoot.style.background = `#ffffff`;
     editorRoot.appendChild(createImg(`editorTitle`, `../img/editor/title.png`, g_sWidth / 2 - 150, 20, 300, 110));
+
+    editorRoot.appendChild(createDivCssLabel(`lblBpmNew`, g_sWidth / 4, g_sHeight - 160, 50, 20, 14, `BPM`, `editor_base`));
+    const txtBpmNew = createTextBox(`txtBpmNew`, g_sWidth / 4 + 50, g_sHeight - 160, 100);
+    editorRoot.appendChild(txtBpmNew);
 
     // スタートボタン描画
     const btnNew = createCssButton({
@@ -70,6 +104,8 @@ function createEditorWindow() {
         class: g_cssObj.button_Next,
     }, _ => {
         clearEditorWindow();
+        g_editorObj.bpm = setVal(txtBpmNew.value, 180, C_TYP_NUMBER);
+        g_editorObj.interval = 1800 / g_editorObj.bpm;
         mainEditorInit();
     });
     editorRoot.appendChild(btnNew);
@@ -116,10 +152,8 @@ function createEditorWindow() {
         align: C_ALIGN_CENTER,
         class: g_cssObj.button_Start,
     }, _ => {
-        if (window.confirm(`エディターを終了します。よろしいですか？`)) {
-            divRoot.removeChild(editorRoot);
-            divRoot.removeChild(btnEditorClose);
-        }
+        document.onkeydown = g_keyDownEvent;
+        divRoot.removeChild(editorRoot);
     });
     editorRoot.appendChild(btnEditorClose);
 }
@@ -153,6 +187,66 @@ function loadEditorInit() {
  */
 function mainEditorInit() {
 
+    const sideBarRoot = createSprite(`editorRoot`, `sideBarRoot`, g_sWidth - 150, 0, 150, g_sHeight);
+
+    // ページ表示
+    const lblPage = createEditorLabel(`lblPage`, 45, 50, 50, 20, 14, g_editorObj.page, C_ALIGN_CENTER);
+    sideBarRoot.appendChild(lblPage);
+    sideBarRoot.appendChild(makePageButton(`lnkPage`, `R`, 95, 50, _ => {
+        g_editorObj.page = (g_editorObj.page === 100 ? 1 : ++g_editorObj.page);
+        lblPage.innerHTML = g_editorObj.page;
+    }));
+    sideBarRoot.appendChild(makePageButton(`lnkPage`, `L`, 25, 50, _ => {
+        g_editorObj.page = (g_editorObj.page === 1 ? 100 : --g_editorObj.page);
+        lblPage.innerHTML = g_editorObj.page;
+    }));
+    sideBarRoot.appendChild(makePageButton(`lnkPage`, `RR`, 120, 50, _ => {
+        g_editorObj.page = (g_editorObj.page === 100 ? 1 : (g_editorObj.page >= 100 - 5 ? 100 : g_editorObj.page + 5));
+        lblPage.innerHTML = g_editorObj.page;
+    }));
+    sideBarRoot.appendChild(makePageButton(`lnkPage`, `LL`, 0, 50, _ => {
+        g_editorObj.page = (g_editorObj.page === 1 ? 100 : (g_editorObj.page <= 5 ? 1 : g_editorObj.page - 5));
+        lblPage.innerHTML = g_editorObj.page;
+    }));
+
+    // 基本項目の表示
+    [`firstNumber`, `interval`, `bpm`].forEach((item, j) => {
+        sideBarRoot.appendChild(createEditorLabel(`lbl${toCapitalize(item)}`, 0, 200 + j * 40, 100, 20, 14, `${toCapitalize(item)}`));
+        sideBarRoot.appendChild(createTextBox(`txt${toCapitalize(item)}`, 0, 220 + j * 40, 100, g_editorObj[item]));
+    })
+
+    // 譜面出力
+    const btnEditorPrint = createCssButton({
+        id: `btnEditorPrint`,
+        name: `GO!`,
+        x: 0,
+        y: 80,
+        width: 70,
+        height: 50,
+        fontsize: 30,
+        align: C_ALIGN_CENTER,
+        class: g_cssObj.button_Next,
+    }, _ => {
+        console.log(`Print`);
+    });
+    sideBarRoot.appendChild(btnEditorPrint);
+
+    // セーブ出力
+    const btnEditorSave = createCssButton({
+        id: `btnEditorSave`,
+        name: `Save`,
+        x: 70,
+        y: 100,
+        width: 70,
+        height: 30,
+        fontsize: 20,
+        align: C_ALIGN_CENTER,
+        class: g_cssObj.button_Setting,
+    }, _ => {
+        console.log(`Save`);
+    });
+    sideBarRoot.appendChild(btnEditorSave);
+
     // タイトルへ戻る
     const btnEditorBack = createCssButton({
         id: `btnEditorBack`,
@@ -171,6 +265,28 @@ function mainEditorInit() {
         }
     });
     editorRoot.appendChild(btnEditorBack);
+}
+
+function createEditorLabel(_id, _x, _y, _width, _height, _fontsize, _text, _align = C_ALIGN_LEFT) {
+    const lbl = createDivCssLabel(_id, _x, _y, _width, _height, _fontsize, _text, `editor_base`);
+    lbl.style.textAlign = _align;
+    return lbl;
+}
+
+function makePageButton(_id, _directionFlg, _x, _y, _func) {
+    const miniButton = createCssButton({
+        id: _id + _directionFlg,
+        name: eval(`C_LBL_SETMINI${_directionFlg}`),
+        x: _x,
+        y: _y - 5,
+        width: 20,
+        height: 30,
+        fontsize: 16,
+        align: C_ALIGN_CENTER,
+        class: g_cssObj.button_Mini,
+    }, _func);
+
+    return miniButton;
 }
 
 /**
