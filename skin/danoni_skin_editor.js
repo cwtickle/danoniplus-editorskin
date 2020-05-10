@@ -9,7 +9,7 @@
  * 
  * https://github.com/cwtickle/danoniplus-editorskin
  */
-var g_editorVersion = `Ver 0.3.0`;
+var g_editorVersion = `Ver 0.4.0`;
 var g_editorRevisedDate = `2020/05/10`;
 var g_keyDownEvent;
 
@@ -18,6 +18,12 @@ var g_editorObj = {
     firstNumber: 200,
     interval: 10,
     page: 1,
+    keyNum: 5,
+    chara: [],
+
+    pageKoma: 64,
+    komaWidth: 20,
+    komaHeight: 7,
 };
 
 /**
@@ -106,6 +112,7 @@ function createEditorWindow() {
         clearEditorWindow();
         g_editorObj.bpm = setVal(txtBpmNew.value, 180, C_TYP_NUMBER);
         g_editorObj.interval = 1800 / g_editorObj.bpm;
+        editorInit();
         mainEditorInit();
     });
     editorRoot.appendChild(btnNew);
@@ -123,6 +130,7 @@ function createEditorWindow() {
         class: g_cssObj.button_Setting,
     }, _ => {
         clearEditorWindow();
+        editorInit();
         loadEditorInit();
     });
     editorRoot.appendChild(btnLoad);
@@ -156,6 +164,12 @@ function createEditorWindow() {
         divRoot.removeChild(editorRoot);
     });
     editorRoot.appendChild(btnEditorClose);
+}
+
+function editorInit() {
+    g_editorObj.keyNum = g_keyObj[`chara${g_keyObj.currentKey}_0`].length;
+    g_editorObj.chara = g_keyObj[`chara${g_keyObj.currentKey}_0`].concat();
+    g_editorObj.komaWidth = (g_sWidth - 350) / g_editorObj.keyNum;
 }
 
 /**
@@ -210,12 +224,32 @@ function mainEditorInit() {
     editorRoot.appendChild(btnEditorBack);
 }
 
+/**
+ * メイン画面・エディター部分
+ */
 function createEditorMain() {
     const mainEditorRoot = createSprite(`editorRoot`, `mainEditorRoot`, 0, 0, g_sWidth - 150, g_sHeight);
+    const komaRoot = createSprite(`mainEditorRoot`, `komaRoot`, 100, 20, g_sWidth - 300, g_sHeight - 40);
     createLine(mainEditorRoot);
-
+    makeKoma(0);
 }
 
+function makeKoma(_startKoma) {
+    const currentBar = _startKoma / g_editorObj.pageKoma;
+
+    g_editorObj.chara.forEach((charaName, j) => {
+        for (let k = 0; k < g_editorObj.pageKoma; k++) {
+
+        }
+    });
+}
+
+
+
+/**
+ * エディター用の小節線を引く
+ * @param {object} _obj 
+ */
 function createLine(_obj) {
     const lineBase = document.createElement(`canvas`);
     lineBase.id = `editorLine`;
@@ -228,9 +262,9 @@ function createLine(_obj) {
 
     const context = lineBase.getContext(`2d`);
 
-    for (let j = 0; j <= 64; j += 16) {
+    for (let j = 0; j <= 64; j += 8) {
         drawEditorLine(context, j, `main`, 2);
-        for (let k = 0; k < 16; k++) {
+        for (let k = 0; k < 8; k++) {
             drawEditorLine(context, (j + k), `sub`, 2);
         }
     }
